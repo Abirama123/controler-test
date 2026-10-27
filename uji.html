@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Uji Kontroler</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#e8edf2;--card:#f7f9fb;--ink:#17202b;--mute:#667385;--line:#c9d2dc;--acc:#2a56f0;--hot:#e8590c;--ok:#12805c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--card:#182029;--ink:#e6ecf3;--mute:#8d9bad;--line:#2b3744;--acc:#6f95ff;--hot:#ff8a4c;--ok:#35c493}}
+:root[data-theme="dark"]{--bg:#10151c;--card:#182029;--ink:#e6ecf3;--mute:#8d9bad;--line:#2b3744;--acc:#6f95ff;--hot:#ff8a4c;--ok:#35c493}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:clamp(28px,6vw,44px);line-height:1.05;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
+h2{font-size:15px;margin:0 0 12px;font-weight:600}
+.sub{color:var(--mute);margin:0 0 18px;max-width:60ch}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.pill{padding:5px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:13px}
+.pill.on{color:var(--ok);border-color:var(--ok)}
+select,button{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--acc)}button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.wide{grid-column:1/-1}
+.sticks{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.sticks div{text-align:center;font-variant-numeric:tabular-nums;color:var(--mute);font-size:13px}
+canvas{display:block;max-width:100%;border-radius:10px;background:var(--bg)}
+.btns{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:6px}
+.b{border:1px solid var(--line);border-radius:8px;padding:6px 4px;text-align:center;font-size:12px;position:relative;overflow:hidden;background:var(--bg)}
+.b i{position:absolute;left:0;bottom:0;width:100%;height:0;background:var(--acc);opacity:.35}
+.b.d{border-color:var(--acc);font-weight:600}
+.b span{position:relative;display:block}.b small{position:relative;color:var(--mute)}
+.row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px;font-variant-numeric:tabular-nums}
+.row label{width:86px;color:var(--mute)}
+.meter{flex:1;height:10px;background:var(--bg);border-radius:6px;position:relative;overflow:hidden}
+.meter i{position:absolute;top:0;bottom:0;background:var(--acc)}
+.row output{width:54px;text-align:right}
+input[type=range]{flex:1;accent-color:var(--acc)}
+.cubewrap{height:170px;display:grid;place-items:center;perspective:480px}
+.cube{width:80px;height:80px;position:relative;transform-style:preserve-3d}
+.cube div{position:absolute;inset:0;border:2px solid var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent);display:grid;place-items:center;font-weight:800;font-size:13px;color:var(--acc)}
+.cube .f{transform:translateZ(40px)}.cube .k{transform:rotateY(180deg) translateZ(40px)}
+.cube .r{transform:rotateY(90deg) translateZ(40px)}.cube .l{transform:rotateY(-90deg) translateZ(40px)}
+.cube .t{transform:rotateX(90deg) translateZ(40px);border-color:var(--hot);color:var(--hot)}.cube .u{transform:rotateX(-90deg) translateZ(40px)}
+#log{height:150px;overflow:auto;font:12px/1.6 ui-monospace,Menlo,Consolas,monospace;color:var(--mute)}
+#log b{color:var(--ink)}
+.note{font-size:13px;color:var(--mute);margin:8px 0 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Uji Kontroler</h1>
+<p class="sub">Colok atau sambungkan gamepad, lalu tekan satu tombol agar browser mendeteksinya. Giroskop di bawah membaca sensor perangkat yang membuka halaman ini (HP/tablet).</p>
+
+<div class="bar">
+  <span class="pill" id="st">Belum ada kontroler</span>
+  <select id="sel" aria-label="Pilih kontroler"></select>
+  <span class="pill" id="hz">0 Hz</span>
+  <button id="rs">Reset hitungan</button>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <h2>Stik analog</h2>
+    <div class="sticks">
+      <div><canvas id="c0" width="190" height="190"></canvas><span id="v0">0.00, 0.00</span></div>
+      <div><canvas id="c1" width="190" height="190"></canvas><span id="v1">0.00, 0.00</span></div>
+    </div>
+    <div class="row"><label>Deadzone</label><input type="range" id="dz" min="0" max="0.4" step="0.01" value="0.08" aria-label="Deadzone"><output id="dzv">0.08</output></div>
+    <p class="note" id="drift">Lepaskan stik untuk cek drift.</p>
+  </section>
+
+  <section class="card">
+    <h2>Tombol</h2>
+    <div class="btns" id="btns"></div>
+    <p class="note">Angka kecil = berapa kali ditekan.</p>
+  </section>
+
+  <section class="card">
+    <h2>Sumbu mentah</h2>
+    <div id="axes"></div>
+    <p class="note">Beberapa kontroler menampilkan sensor gerak atau trigger sebagai sumbu tambahan di sini.</p>
+  </section>
+
+  <section class="card">
+    <h2>Getar</h2>
+    <div class="row"><label>Kuat</label><input type="range" id="vs" min="0" max="1" step="0.05" value="1" aria-label="Getar kuat"></div>
+    <div class="row"><label>Lemah</label><input type="range" id="vw" min="0" max="1" step="0.05" value="1" aria-label="Getar lemah"></div>
+    <div class="row"><label>Durasi (ms)</label><input type="range" id="vd" min="100" max="2000" step="100" value="600" aria-label="Durasi"></div>
+    <button class="pri" id="vb">Getarkan</button>
+    <p class="note" id="vn"></p>
+  </section>
+
+  <section class="card wide">
+    <h2>Giroskop dan akselerometer</h2>
+    <div class="bar">
+      <button class="pri" id="gs">Aktifkan sensor</button>
+      <button id="gz">Nolkan arah</button>
+      <span class="pill" id="gst">Mati</span>
+    </div>
+    <div class="grid">
+      <div class="cubewrap"><div class="cube" id="cube"><div class="f">DEPAN</div><div class="k">BELAKANG</div><div class="r">KANAN</div><div class="l">KIRI</div><div class="t">ATAS</div><div class="u">BAWAH</div></div></div>
+      <div id="gv"></div>
+      <div><canvas id="gc" width="320" height="150" style="width:100%"></canvas><p class="note">Kecepatan putar (°/detik): X biru, Y oranye, Z hijau.</p></div>
+    </div>
+    <p class="note" id="gn">iPhone/iPad meminta izin saat tombol ditekan. Sensor butuh HTTPS dan perangkat bergerak; laptop biasanya tidak punya. Gyro bawaan DualShock/Switch Pro tidak dibuka oleh browser lewat Gamepad API.</p>
+  </section>
+
+  <section class="card wide"><h2>Log kejadian</h2><div id="log"></div></section>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const NAMES=["A","B","X","Y","LB","RB","LT","RT","Back","Start","L3","R3","↑","↓","←","→","Home"];
+let cur=null,counts={},prev={},trails=[[],[]],hzN=0,hzT=performance.now(),lastTs={},hz=0;
+const logEl=$("log");
+function log(t){const d=document.createElement("div");d.innerHTML="<b>"+new Date().toLocaleTimeString()+"</b> "+t;logEl.prepend(d);while(logEl.children.length>60)logEl.lastChild.remove()}
+function pads(){return [...(navigator.getGamepads?navigator.getGamepads():[])].filter(Boolean)}
+function refresh(){
+  const p=pads();$("sel").innerHTML=p.map(g=>`<option value="${g.index}">${g.index}: ${g.id.slice(0,48)}</option>`).join("");
+  if(p.length){if(cur===null||!p.find(g=>g.index===cur))cur=p[0].index;$("sel").value=cur}else cur=null;
+  const g=p.find(x=>x.index===cur);
+  $("st").textContent=g?"Terhubung · "+g.mapping+" · "+g.buttons.length+" tombol · "+g.axes.length+" sumbu":"Belum ada kontroler";
+  $("st").classList.toggle("on",!!g);
+}
+addEventListener("gamepadconnected",e=>{log("Tersambung: "+e.gamepad.id);refresh()});
+addEventListener("gamepaddisconnected",e=>{log("Terputus: "+e.gamepad.id);refresh()});
+$("sel").onchange=e=>{cur=+e.target.value;counts={};refresh()};
+$("rs").onclick=()=>{counts={};trails=[[],[]];log("Hitungan direset")};
+$("dz").oninput=e=>$("dzv").textContent=(+e.target.value).toFixed(2);
+
+function stick(c,x,y,i){
+  const k=c.getContext("2d"),s=css("--ink"),a=css("--acc"),m=css("--line"),W=c.width,R=W/2-10,dz=+$("dz").value;
+  k.clearRect(0,0,W,W);k.strokeStyle=m;k.lineWidth=1;
+  k.beginPath();k.arc(W/2,W/2,R,0,7);k.stroke();
+  k.beginPath();k.moveTo(W/2,10);k.lineTo(W/2,W-10);k.moveTo(10,W/2);k.lineTo(W-10,W/2);k.stroke();
+  k.setLineDash([3,3]);k.beginPath();k.arc(W/2,W/2,R*dz,0,7);k.stroke();k.setLineDash([]);
+  const t=trails[i];t.push([x,y]);if(t.length>24)t.shift();
+  k.strokeStyle=a;k.globalAlpha=.4;k.lineWidth=2;k.beginPath();t.forEach((q,j)=>j?k.lineTo(W/2+q[0]*R,W/2+q[1]*R):k.moveTo(W/2+q[0]*R,W/2+q[1]*R));k.stroke();k.globalAlpha=1;
+  const active=Math.hypot(x,y)>dz;k.fillStyle=active?a:s;
+  k.beginPath();k.arc(W/2+x*R,W/2+y*R,9,0,7);k.fill();
+}
+const cs=getComputedStyle(document.documentElement);
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||"#888"}
+
+$("btns").innerHTML=NAMES.map((n,i)=>`<div class="b" id="b${i}"><i></i><span>${n}</span><small>0</small></div>`).join("");
+function loop(now){
+  const g=pads().find(x=>x.index===cur);
+  if(g){
+    if(g.timestamp!==lastTs[g.index]){hzN++;lastTs[g.index]=g.timestamp}
+    if(now-hzT>1000){hz=Math.round(hzN*1000/(now-hzT));$("hz").textContent=hz+" Hz";hzN=0;hzT=now}
+    g.buttons.forEach((b,i)=>{
+      let el=$("b"+i);
+      if(!el){$("btns").insertAdjacentHTML("beforeend",`<div class="b" id="b${i}"><i></i><span>Btn ${i}</span><small>0</small></div>`);el=$("b"+i)}
+      const down=b.pressed||b.value>.5;
+      if(down&&!prev[i]){counts[i]=(counts[i]||0)+1;log("Tombol <b>"+(NAMES[i]||i)+"</b> ditekan")}
+      prev[i]=down;el.classList.toggle("d",down);
+      el.firstChild.style.height=(b.value*100)+"%";el.lastChild.textContent=counts[i]||0;
+    });
+    const ax=g.axes;
+    const dz=+$("dz").value;
+    [[0,1],[2,3]].forEach(([a,b],i)=>{
+      const x=ax[a]||0,y=ax[b]||0;stick($("c"+i),x,y,i);
+      $("v"+i).textContent=x.toFixed(2)+", "+y.toFixed(2)+"  ·  "+Math.min(1,Math.hypot(x,y)).toFixed(2);
+    });
+    const idle=!g.buttons.some(b=>b.pressed);
+    const dr=[0,1,2,3].map(i=>Math.abs(ax[i]||0));
+    $("drift").textContent=Math.max(...dr)>0.05&&Math.max(...dr)<0.5&&idle?"Kemungkinan drift: stik bergeser sampai "+Math.max(...dr).toFixed(2)+" dari tengah.":"Lepaskan stik untuk cek drift.";
+    const box=$("axes");
+    if(box.children.length!==ax.length)box.innerHTML=ax.map((_,i)=>`<div class="row"><label>Sumbu ${i}</label><div class="meter"><i></i></div><output></output></div>`).join("");
+    ax.forEach((v,i)=>{const r=box.children[i],f=r.querySelector("i");f.style.left=(v<0?50+v*50:50)+"%";f.style.width=Math.abs(v)*50+"%";r.querySelector("output").textContent=v.toFixed(3)});
+  }
+  requestAnimationFrame(loop);
+}
+$("vb").onclick=()=>{
+  const g=pads().find(x=>x.index===cur);
+  if(!g){$("vn").textContent="Belum ada kontroler.";return}
+  const a=g.vibrationActuator;
+  if(!a){$("vn").textContent="Kontroler atau browser ini tidak mendukung getar (Chrome/Edge biasanya mendukung).";return}
+  a.playEffect(a.type||"dual-rumble",{startDelay:0,duration:+$("vd").value,strongMagnitude:+$("vs").value,weakMagnitude:+$("vw").value})
+   .then(r=>{$("vn").textContent="Getar: "+r;log("Getar dikirim ("+r+")")}).catch(e=>$("vn").textContent="Gagal: "+e.message);
+};
+
+/* Giroskop */
+let on=false,off=[0,0,0],ori=[0,0,0],hist=[[],[],[]],lastEv=0,tmo;
+function row(n,v,u){return `<div class="row"><label>${n}</label><output style="width:auto">${v==null?"–":v.toFixed(2)} ${u}</output></div>`}
+function showVals(rot,acc){
+  $("gv").innerHTML=row("Alpha (Z)",ori[0],"°")+row("Beta (X)",ori[1],"°")+row("Gamma (Y)",ori[2],"°")+
+    row("Putar X",rot&&rot.beta,"°/s")+row("Putar Y",rot&&rot.gamma,"°/s")+row("Putar Z",rot&&rot.alpha,"°/s")+
+    row("Akselerasi X",acc&&acc.x,"m/s²")+row("Akselerasi Y",acc&&acc.y,"m/s²")+row("Akselerasi Z",acc&&acc.z,"m/s²");
+}
+showVals();
+function drawG(){
+  const c=$("gc"),k=c.getContext("2d"),W=c.width,H=c.height;k.clearRect(0,0,W,H);
+  k.strokeStyle=css("--line");k.beginPath();k.moveTo(0,H/2);k.lineTo(W,H/2);k.stroke();
+  ["--acc","--hot","--ok"].forEach((col,j)=>{k.strokeStyle=css(col);k.lineWidth=2;k.beginPath();
+    hist[j].forEach((v,i)=>{const y=H/2-Math.max(-1,Math.min(1,v/360))*(H/2-6);i?k.lineTo(i*W/90,y):k.moveTo(0,y)});k.stroke()});
+}
+function onOri(e){
+  lastEv=performance.now();ori=[e.alpha||0,e.beta||0,e.gamma||0];
+  $("cube").style.transform=`rotateX(${-(ori[1]-off[1])}deg) rotateY(${(ori[2]-off[2])}deg) rotateZ(${(ori[0]-off[0])}deg)`;
+}
+function onMot(e){
+  lastEv=performance.now();const r=e.rotationRate||{},a=e.accelerationIncludingGravity||e.acceleration||{};
+  [r.beta,r.gamma,r.alpha].forEach((v,i)=>{hist[i].push(v||0);if(hist[i].length>90)hist[i].shift()});
+  showVals(r.alpha==null?null:r,a.x==null?null:a);drawG();
+}
+$("gs").onclick=async()=>{
+  if(on){removeEventListener("deviceorientation",onOri);removeEventListener("devicemotion",onMot);on=false;$("gs").textContent="Aktifkan sensor";$("gst").textContent="Mati";return}
+  try{
+    for(const D of [DeviceOrientationEvent,DeviceMotionEvent]){
+      if(D&&typeof D.requestPermission==="function"){const r=await D.requestPermission();if(r!=="granted"){$("gst").textContent="Izin ditolak";return}}
+    }
+  }catch(e){$("gst").textContent="Izin gagal";$("gn").textContent="Izin sensor gagal: "+e.message;return}
+  addEventListener("deviceorientation",onOri);addEventListener("devicemotion",onMot);
+  on=true;lastEv=0;$("gs").textContent="Matikan sensor";$("gst").textContent="Menunggu data…";
+  clearTimeout(tmo);tmo=setTimeout(()=>{if(on&&!lastEv){$("gst").textContent="Tidak ada data";$("gn").textContent="Tidak ada data sensor. Buka halaman ini di HP, pakai HTTPS, dan pastikan akses sensor gerak diizinkan di pengaturan browser."}},2000);
+};
+setInterval(()=>{if(on&&lastEv&&performance.now()-lastEv<1000)$("gst").textContent="Aktif"},500);
+$("gz").onclick=()=>{off=[...ori];log("Arah giroskop dinolkan")};
+
+refresh();requestAnimationFrame(loop);
+setInterval(()=>{if(!cur)refresh()},1000);
+</script>
+</body>
+</html>
